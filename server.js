@@ -5,14 +5,14 @@ const server = http.createServer(app);
 const socket = require("socket.io");
 const io = socket(server);
 
-const rooms = {}; //armazena informações sobre as salas.
+const rooms = {};
 
 io.on("connection", (socket) => {
   socket.on("join room", (roomID) => {
     if (rooms[roomID]) {
-      romms[roomID].push(socket.id);
+      rooms[roomID].push(socket.id);
     } else {
-      romms[roomID] = [socket.id];
+      rooms[roomID] = [socket.id];
     }
     const otherUser = rooms[roomID].find((id) => id !== socket.id);
     if (otherUser) {
@@ -20,21 +20,21 @@ io.on("connection", (socket) => {
       socket.to(otherUser).emit("user joined", socket.id);
     }
   });
+
+  socket.on("offer", (payload) => {
+    io.to(payload.target).emit("offer", payload);
+  });
+
+  socket.on("answer", (payload) => {
+    io.to(payload.target).emit("answer", payload);
+  });
+
+  socket.on("ice-candidate", (incoming) => {
+    io.to(incoming.target).emit("ice-candidate", incoming.candidate);
+  });
 });
 
-socket.on("offer", (payload) => {
-  io.to(payload.target).emit("offer", payload);
-});
-
-socket.on("answer", (payload) => {
-  io.to(payload.target).emit("answer", payload);
-});
-
-socket.on('ice-candidate',incoming => {
-  io.to(incoming.target).emit("ice-candidate",incoming.candidate)
-})
-
-server.listen(11000, () => console.log("O server esta rodando na porta 11000"));
+server.listen(8000, () => console.log("server is running on port 8000"));
 
 /* 
 Codigo Explicado:
@@ -65,5 +65,3 @@ socket.on('ice-candidate',incoming => { ... } - Escuta o evento "ice-candidate" 
 
 server.listen(11000, () => console.log("O server esta rodando na porta 11000")); - Inicia o servidor HTTP Node.js na porta 11000 e exibe uma mensagem no console quando o servidor estiver em execução.
 */
-
-
